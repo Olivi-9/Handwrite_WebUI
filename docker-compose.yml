@@ -13,8 +13,12 @@ services:
       BACKEND_PORT: 8443
       SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:?SESSION_SECRET_KEY must be set in .env}
       CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS must be set in .env}
-      BACKEND_SSL_CERT_FILE: ${BACKEND_SSL_CERT_FILE:-/app/certs/local/localhost.crt}
-      BACKEND_SSL_KEY_FILE: ${BACKEND_SSL_KEY_FILE:-/app/certs/local/localhost.key}
+      BACKEND_DOMAIN: ${BACKEND_DOMAIN:-}
+      LETSENCRYPT_DOMAIN: ${LETSENCRYPT_DOMAIN:-}
+      LETSENCRYPT_DIR: ${LETSENCRYPT_DIR:-/app/certs/letsencrypt}
+      LOCAL_CERT_DIR: ${LOCAL_CERT_DIR:-/app/certs/local}
+      BACKEND_SSL_CERT_FILE: ${BACKEND_SSL_CERT_FILE:-}
+      BACKEND_SSL_KEY_FILE: ${BACKEND_SSL_KEY_FILE:-}
       BACKEND_LOG_LEVEL: ${BACKEND_LOG_LEVEL:-INFO}
     volumes:
       - ./certs:/app/certs:ro

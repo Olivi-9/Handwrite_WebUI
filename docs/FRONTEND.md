@@ -36,10 +36,10 @@ frontend/handwrite-react-tailwind-frontend/
 
 ## 快速开始
 
-所有命令均在 `frontend/handwrite-react-tailwind-frontend/` 下执行。
+所有命令均在 `frontend/` 下执行。
 
 ```bash
-cd frontend/handwrite-react-tailwind-frontend
+cd frontend/
 
 # 安装依赖（pnpm 或 npm 任一）
 pnpm install

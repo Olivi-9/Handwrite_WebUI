@@ -32,14 +32,24 @@ cp .env.backend.example .env
 # 2. 准备证书（容器内不会自动生成）
 #    使用 Let's Encrypt：
 ./scripts/backend_issue_cert.sh --domain example.com --email admin@example.com
-#    或将自签证书放到 ./certs/local/localhost.{crt,key}
+```
+
+```bash
+# 或将自签证书放到 ./certs/local/localhost.{crt,key}
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+  -keyout local.key -out local.crt \
+  -subj "/C=CN/ST=GD/L=SZ/O=Dev/OU=IT/CN=localhost"
+```
 
 # 3. 启动后端
+
 docker compose up -d --build
 
 # 4. 验证
+
 curl -k https://127.0.0.1:8443/health
-```
+
+````
 
 详细说明见 [docs/BACKEND.md](docs/BACKEND.md)。
 
@@ -50,11 +60,11 @@ curl -k https://127.0.0.1:8443/health
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-cp .env.backend.example .env   # 填写必填项
+cp .env.backend.example .env   # 必填项
 
 # 准备证书后启动
 ./scripts/run_backend_https.sh
-```
+````
 
 完整说明：[docs/BACKEND.md](docs/BACKEND.md)。
 
@@ -62,8 +72,8 @@ cp .env.backend.example .env   # 填写必填项
 
 ```bash
 cd frontend/handwrite-react-tailwind-frontend
-npm install
-npm run dev      # http://localhost:5173
+pnpm i
+pnpm dev      # http://localhost:5173
 ```
 
 完整说明：[docs/FRONTEND.md](docs/FRONTEND.md)。
