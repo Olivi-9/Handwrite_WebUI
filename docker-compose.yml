@@ -1,0 +1,39 @@
+services:
+  backend:
+    image: handwrite-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: handwrite-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8443}:8443"
+    environment:
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8443
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:?SESSION_SECRET_KEY must be set in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS must be set in .env}
+      BACKEND_SSL_CERT_FILE: ${BACKEND_SSL_CERT_FILE:-/app/certs/local/localhost.crt}
+      BACKEND_SSL_KEY_FILE: ${BACKEND_SSL_KEY_FILE:-/app/certs/local/localhost.key}
+      BACKEND_LOG_LEVEL: ${BACKEND_LOG_LEVEL:-INFO}
+    volumes:
+      - ./certs:/app/certs:ro
+      - ./backend/static/uploads:/app/backend/static/uploads
+      - ./backend/static/output:/app/backend/static/output
+      - ./backend/logs:/app/backend/logs
+    networks:
+      - handwrite
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request, ssl; ctx=ssl._create_unverified_context(); urllib.request.urlopen(''https://127.0.0.1:8443/health'', context=ctx, timeout=3)"',
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  handwrite:
+    driver: bridge

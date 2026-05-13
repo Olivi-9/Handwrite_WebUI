@@ -1,0 +1,48 @@
+.git
+.gitignore
+.gitattributes
+
+# Env files
+.env
+.env.*
+!.env.backend.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+ENV/
+
+# Node / frontend
+node_modules/
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/dist-ssr/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Docs / project meta
+*.md
+LICENSE
+docs/
+AGENT.md
+.REFACTOR.md
+
+# Runtime data — must be mounted, never baked in
+certs/
+backend/static/uploads/*
+backend/static/output/*
+backend/logs/*
+
+# Build artefacts / caches
+**/__pycache__/
+**/*.egg-info/

@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* App-wide light/dark basics */
+:root {
+  color-scheme: light dark;
+}
+
+/* Smooth transitions for theme toggle */
+html, body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

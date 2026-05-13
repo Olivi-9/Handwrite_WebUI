@@ -1,0 +1,39 @@
+# syntax=docker/dockerfile:1.6
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libjpeg62-turbo \
+        zlib1g \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/requirements.txt
+RUN pip install -r /app/requirements.txt
+
+COPY backend /app/backend
+COPY ttf /app/ttf
+COPY background /app/background
+
+RUN mkdir -p /app/backend/static/uploads \
+             /app/backend/static/output \
+             /app/backend/logs \
+             /app/certs
+
+EXPOSE 8443
+
+# Certificates must be mounted at runtime (no in-container generation).
+# Override these env vars to match the mount paths.
+ENV BACKEND_HOST=0.0.0.0 \
+    BACKEND_PORT=8443 \
+    BACKEND_SSL_CERT_FILE=/app/certs/local/localhost.crt \
+    BACKEND_SSL_KEY_FILE=/app/certs/local/localhost.key
+
+CMD ["sh", "-c", "exec uvicorn backend.main:app --host \"$BACKEND_HOST\" --port \"$BACKEND_PORT\" --ssl-certfile \"$BACKEND_SSL_CERT_FILE\" --ssl-keyfile \"$BACKEND_SSL_KEY_FILE\""]
