@@ -9,7 +9,7 @@ export default function App() {
   const [backgrounds, setBackgrounds] = useState([])
   const [loadingMeta, setLoadingMeta] = useState(true)
 
-  const [text, setText] = useState('2026-05-09更新\n原服务器商家跑路,现暂时使用Azure过渡\n输入要生成的内容，支持换行\n多段文本将自动分页渲染。\n可自行上传背景，建议少量文字逐渐调整参数测试效果，无误后再大批量生成。\n图片不要过大以免长时间等待生成。可以在下方"背景缩放"参数调整背景图片放大倍率。\n有现成字体可选，找一个适合自己的字体。生成后建议再单独生成个人姓名P上保证全局字体一致\n后端不会保留用户图片，每2min执行清理，可放心生成内容\n希望这个项目能帮助到你~!')
+  const [text, setText] = useState('输入要生成的内容，支持换行\n多段文本将自动分页渲染。\n可自行上传背景，建议少量文字逐渐调整参数测试效果，无误后再大批量生成。\n图片不要过大以免长时间等待生成。可以在下方"背景缩放"参数调整背景图片放大倍率。\n有现成字体可选，找一个适合自己的字体。生成后建议再单独生成个人姓名P上保证全局字体一致\n后端不会保留用户图片，每10min执行清理，可放心生成内容\n希望这个项目能帮助到你~!')
   const [font, setFont] = useState('')
   const [fontSize, setFontSize] = useState(85)
   const [lineSpacing, setLineSpacing] = useState(100)
@@ -240,8 +240,6 @@ export default function App() {
               {genLoading ? '生成中，请稍候...' : '尚未生成，点击左侧“生成”按钮'}
             </div>
           )}
-          <h3 className="mb-4 text-sm text-gray-500 dark:text-gray-400">联系方式: acgn345@outlook.com</h3>
-
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {outputs.map((url, idx) => (
               <div key={`${url}-${idx}`} className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
@@ -253,6 +251,16 @@ export default function App() {
               </div>
             ))}
           </div>
+          <h3 className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+            <a href="mailto:me@olivi.top" className="text-blue-600 hover:underline dark:text-blue-400">
+              联系方式: me@olivi.top
+            </a>
+          </h3>
+          <h3 className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+            <a href="https://github.com/olivi-9/Handwrite_WebUI" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">
+              GitHub 开源地址: Handwrite_WebUI
+            </a>
+          </h3>
         </section>
       </div>
     </div>
