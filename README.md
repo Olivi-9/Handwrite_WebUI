@@ -46,10 +46,9 @@ openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
 docker compose up -d --build
 
 # 4. 验证
-
+```
 curl -k https://127.0.0.1:8443/health
-
-````
+```
 
 详细说明见 [docs/BACKEND.md](docs/BACKEND.md)。
 
@@ -64,7 +63,7 @@ cp .env.backend.example .env   # 必填项
 
 # 准备证书后启动
 ./scripts/run_backend_https.sh
-````
+```
 
 完整说明：[docs/BACKEND.md](docs/BACKEND.md)。
 

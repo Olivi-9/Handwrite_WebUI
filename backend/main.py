@@ -35,6 +35,7 @@ configure_logging()
 logger = logging.getLogger("backend.main")
 
 app = FastAPI(
+    docs_url="/api/docs",
     title="Handwrite Generator API",
     version="0.1.0",
     description="为手写体生成器 Web 应用提供后端接口.",
