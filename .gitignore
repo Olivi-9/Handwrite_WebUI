@@ -43,6 +43,3 @@ coverage/
 # Temporary files
 *.tmp
 *.bak
-
-# certs
-certs/

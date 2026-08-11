@@ -8,7 +8,7 @@
 .
 ├── backend/                # FastAPI 后端
 ├── frontend/               # React + Vite + Tailwind 前端
-├── scripts/                # 启动 / 证书申请脚本
+├── scripts/                # 后端启动脚本
 ├── docs/
 │   ├── BACKEND.md          # 后端开发与部署文档
 │   └── FRONTEND.md         # 前端开发文档
@@ -24,31 +24,21 @@
 
 ### 一、Docker Compose（推荐用于部署）
 
+后端只跑 HTTP，对外访问由 Cloudflare Tunnel 穿透并终止 TLS，不再需要在服务器上申请或维护证书。
+
 ```bash
 # 1. 配置环境变量
 cp .env.backend.example .env
-# 至少填好 SESSION_SECRET_KEY 和 CORS_ORIGINS
+# 至少填好 SESSION_SECRET_KEY、CORS_ORIGINS 和 TUNNEL_TOKEN
 
-# 2. 准备证书（容器内不会自动生成）
-#    使用 Let's Encrypt：
-./scripts/backend_issue_cert.sh --domain example.com --email admin@example.com
-```
-
-```bash
-# 或将自签证书放到 ./certs/local/localhost.{crt,key}
-openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-  -keyout local.key -out local.crt \
-  -subj "/C=CN/ST=GD/L=SZ/O=Dev/OU=IT/CN=localhost"
-```
-
-# 3. 启动后端
-
+# 2. 启动后端 + cloudflared
 docker compose up -d --build
 
-# 4. 验证
+# 3. 验证（本机）
+curl http://127.0.0.1:8000/health
 ```
-curl -k https://127.0.0.1:8443/health
-```
+
+在 Cloudflare Zero Trust 的 Tunnel 里，把 Public Hostname 指向 `http://backend:8000` 即可对外提供 HTTPS 访问。
 
 详细说明见 [docs/BACKEND.md](docs/BACKEND.md)。
 
@@ -61,8 +51,7 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 cp .env.backend.example .env   # 必填项
 
-# 准备证书后启动
-./scripts/run_backend_https.sh
+./scripts/run_backend.sh       # http://127.0.0.1:8000
 ```
 
 完整说明：[docs/BACKEND.md](docs/BACKEND.md)。

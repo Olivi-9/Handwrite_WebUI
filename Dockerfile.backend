@@ -25,13 +25,12 @@ COPY --chmod=755 scripts/run_backend_container.sh /app/scripts/run_backend_conta
 
 RUN mkdir -p /app/backend/static/uploads \
     /app/backend/static/output \
-    /app/backend/logs \
-    /app/certs
+    /app/backend/logs
 
-EXPOSE 8443
+EXPOSE 8000
 
-# Certificates must be mounted at runtime (no in-container generation).
+# Plain HTTP only: TLS is terminated by Cloudflare Tunnel in front of this service.
 ENV BACKEND_HOST=0.0.0.0 \
-    BACKEND_PORT=8443
+    BACKEND_PORT=8000
 
 CMD ["/app/scripts/run_backend_container.sh"]

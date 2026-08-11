@@ -1,4 +1,4 @@
-const DEFAULT_DEV_API_BASE = 'https://127.0.0.1:8443'
+const DEFAULT_DEV_API_BASE = 'http://127.0.0.1:8000'
 const API_BASE = String(import.meta?.env?.VITE_API_BASE || DEFAULT_DEV_API_BASE).replace(/\/+$/, '')
 const FALLBACK_ERROR_MESSAGE = '请求失败，请稍后重试'
 

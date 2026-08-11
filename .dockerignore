@@ -38,7 +38,6 @@ AGENT.md
 .REFACTOR.md
 
 # Runtime data — must be mounted, never baked in
-certs/
 backend/static/uploads/*
 backend/static/output/*
 backend/logs/*

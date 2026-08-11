@@ -65,16 +65,16 @@ Vite 在构建时按 `mode` 选择 `.env*` 文件，仅 `VITE_` 前缀的变量�
 
 | 变量 | 说明 | 示例 |
 | --- | --- | --- |
-| `VITE_API_BASE` | 后端 API 基地址（不含尾斜杠） | `https://api.example.com:8443` |
+| `VITE_API_BASE` | 后端 API 基地址（不含尾斜杠） | `https://api.example.com` |
 
-- 开发：编辑 `.env` 让其指向本地后端（如 `https://127.0.0.1:8443`）。
+- 开发：编辑 `.env` 让其指向本地后端（如 `http://127.0.0.1:8000`）。
 - 生产：编辑 `.env.production` 指向部署后的后端域名。
 
 修改 `.env*` 后需要重启 `vite` 进程才能生效。
 
 ## 与后端联调要点
 
-- 后端默认 HTTPS（自签或 Let's Encrypt），开发时浏览器需先信任后端域名（在浏览器中访问一次 `https://127.0.0.1:8443/health` 并放行）。
+- 后端本地以 HTTP 运行（默认 `http://127.0.0.1:8000`），无需处理证书；线上由 Cloudflare Tunnel 终止 TLS，前端访问的是 `https://<tunnel 域名>`。
 - 后端 `CORS_ORIGINS` 必须显式包含前端开发地址，例如：
   ```
   CORS_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
@@ -84,6 +84,6 @@ Vite 在构建时按 `mode` 选择 `.env*` 文件，仅 `VITE_` 前缀的变量�
 ## 故障排除
 
 - **接口报 CORS 错误**：检查后端 `.env` 的 `CORS_ORIGINS` 是否包含当前来源（精确到协议+主机+端口）。
-- **`NET::ERR_CERT_AUTHORITY_INVALID`**：使用自签证书时，先手动在浏览器中访问后端地址并“继续访问”一次。
+- **混合内容被浏览器拦截**：HTTPS 页面不能调用 `http://` 后端；生产环境请把 `VITE_API_BASE` 指向 Cloudflare Tunnel 的 HTTPS 域名。
 - **页面空白 / 资源 404**：确认 `VITE_API_BASE` 不含尾斜杠且协议正确；生产部署时通常由 Nginx 反向代理 `/api`。
 - **构建后接口指向开发地址**：忘了维护 `.env.production`；构建命令使用 production mode。

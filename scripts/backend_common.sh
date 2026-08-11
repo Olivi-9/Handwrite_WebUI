@@ -4,10 +4,6 @@ if [ -z "${BACKEND_PROJECT_ROOT:-}" ]; then
     BACKEND_PROJECT_ROOT="$(pwd)"
 fi
 
-backend_trim() {
-    printf '%s' "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
-}
-
 backend_load_env_file() {
     env_file="$1"
     if [ ! -f "$env_file" ]; then
@@ -50,21 +46,4 @@ backend_first_non_empty() {
     done
     printf '\n'
     return 0
-}
-
-backend_primary_domain() {
-    raw_domains="$(backend_first_non_empty "$1" "")"
-    primary_domain="$(printf '%s' "$raw_domains" | cut -d',' -f1)"
-    backend_trim "$primary_domain"
-}
-
-backend_bool() {
-    case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
-        1|true|yes|on)
-            printf '%s\n' "true"
-            ;;
-        *)
-            printf '%s\n' "false"
-            ;;
-    esac
 }

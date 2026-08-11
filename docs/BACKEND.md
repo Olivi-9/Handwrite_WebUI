@@ -47,63 +47,46 @@ backend/
    cp .env.backend.example .env
    # 至少填好 SESSION_SECRET_KEY 与 CORS_ORIGINS
    ```
-3. 准备证书（三种方式选一种，见下方“证书配置”）。
-4. 启动：
+3. 启动：
    ```bash
-   ./scripts/run_backend_https.sh
+   ./scripts/run_backend.sh
    ```
-   成功后访问 `https://127.0.0.1:8443/health`。
+   成功后访问 `http://127.0.0.1:8000/health`。
 
 ### B. Docker 运行
 
-1. 准备 `.env`（与上同）。
-2. 生成证书（**必须在容器外完成**）：
-   ```bash
-   ./scripts/backend_issue_cert.sh --domain example.com --email admin@example.com
-   # 或自带本地证书放到 ./certs/local/
-   ```
-3. 启动：
+1. 准备 `.env`（与上同），额外填入 `TUNNEL_TOKEN`（见下方“对外暴露”）。
+2. 启动（backend + cloudflared）：
    ```bash
    docker compose up -d --build
    ```
-4. 手动方式（不使用 compose）：
+3. 手动方式（不使用 compose，仅后端）：
    ```bash
    docker build -f Dockerfile.backend -t handwrite-backend:latest .
    docker run -d \
-     -p 8443:8443 \
-     -v "$(pwd)/certs:/app/certs:ro" \
+     -p 127.0.0.1:8000:8000 \
      -v "$(pwd)/backend/static:/app/backend/static" \
      -e SESSION_SECRET_KEY="$(openssl rand -hex 32)" \
      -e CORS_ORIGINS="https://your-frontend.example.com" \
-     -e BACKEND_SSL_CERT_FILE=/app/certs/letsencrypt/live/example.com/fullchain.pem \
-     -e BACKEND_SSL_KEY_FILE=/app/certs/letsencrypt/live/example.com/privkey.pem \
      handwrite-backend:latest
    ```
 
-## 证书配置
+## 对外暴露（Cloudflare Tunnel）
 
-`scripts/run_backend_https.sh` 按以下优先级查找证书，**不会自动生成**：
+后端**只监听 HTTP**，不再持有或申请任何证书；TLS 由 Cloudflare 边缘终止，
+`cloudflared` 通过出站连接把流量送到容器，无需在防火墙上开放端口。
 
-1. **手动指定**：环境变量 `BACKEND_SSL_CERT_FILE` 与 `BACKEND_SSL_KEY_FILE`。
-2. **Let's Encrypt**：`${LETSENCRYPT_DIR}/live/${BACKEND_DOMAIN}/{fullchain,privkey}.pem`，默认根目录为 `./certs/letsencrypt`。
-3. **本地开发证书**：`./certs/local/localhost.{crt,key}`，必须事先存在。
+1. 在 Cloudflare Zero Trust → Networks → Tunnels 新建 Tunnel，复制 Token。
+2. 写入 `.env`：
+   ```bash
+   TUNNEL_TOKEN="eyJhIjoi..."
+   ```
+3. 在 Tunnel 的 Public Hostname 中把域名（如 `api.example.com`）指向
+   `http://backend:8000`（compose 内的服务名与端口）。
+4. `docker compose up -d` 后，`cloudflared` 与后端同处 `handwrite` 网络即可连通。
 
-若三种都没找到，脚本会输出明确错误并退出。生成本地开发证书的一次性命令：
-
-```bash
-mkdir -p ./certs/local
-openssl req -x509 -nodes -newkey rsa:2048 \
-  -keyout ./certs/local/localhost.key \
-  -out   ./certs/local/localhost.crt \
-  -days 365 -subj "/CN=localhost" \
-  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
-```
-
-申请 Let's Encrypt 证书：
-
-```bash
-./scripts/backend_issue_cert.sh --domain api.example.com --email admin@example.com
-```
+`docker-compose.yml` 中后端端口只绑定在 `127.0.0.1`，用于本机调试；
+**不要**把它直接发布到公网。
 
 ## 环境变量
 
@@ -111,16 +94,9 @@ openssl req -x509 -nodes -newkey rsa:2048 \
 | --- | --- | --- | --- |
 | `SESSION_SECRET_KEY` | 是 | — | Session 中间件密钥，≥ 32 字符 |
 | `CORS_ORIGINS` | 是 | — | 允许的前端来源（逗号分隔，禁止 `*`） |
-| `BACKEND_HOST` | 否 | `0.0.0.0` | 监听地址 |
-| `BACKEND_PORT` | 否 | `8443` | 监听端口 |
-| `BACKEND_DOMAIN` | 否 | `localhost` | 用于定位 Let's Encrypt 证书目录 |
-| `BACKEND_SSL_CERT_FILE` | 否 | — | 手动指定证书路径 |
-| `BACKEND_SSL_KEY_FILE` | 否 | — | 手动指定私钥路径 |
-| `LETSENCRYPT_DIR` | 否 | `./certs/letsencrypt` | Let's Encrypt 输出根目录 |
-| `LETSENCRYPT_DOMAIN` | 否 | — | 申请证书的主域名 |
-| `LETSENCRYPT_EMAIL` | 否 | — | Let's Encrypt 联系邮箱 |
-| `CERTBOT_WEBROOT` | 否 | `./certs/www` | webroot 模式下的 ACME 验证目录 |
-| `LOCAL_CERT_DIR` | 否 | `./certs/local` | 本地证书目录 |
+| `BACKEND_HOST` | 否 | 本地 `127.0.0.1` / 容器 `0.0.0.0` | 监听地址 |
+| `BACKEND_PORT` | 否 | `8000` | 监听端口（HTTP） |
+| `TUNNEL_TOKEN` | Docker 必填 | — | Cloudflare Tunnel 令牌，供 `cloudflared` 服务使用 |
 | `BACKEND_VENV_DIR` | 否 | `./.venv` | 本地启动脚本使用的虚拟环境 |
 | `BACKEND_LOG_LEVEL` | 否 | `INFO` | 日志级别 |
 | `BACKEND_LOG_DIR` | 否 | `backend/logs` | 日志目录 |
@@ -137,8 +113,8 @@ openssl req -x509 -nodes -newkey rsa:2048 \
 
 启动后端后访问：
 
-- Swagger UI：`https://<host>:<port>/docs`
-- ReDoc：`https://<host>:<port>/redoc`
+- Swagger UI：`http://<host>:<port>/api/docs`
+- ReDoc：`http://<host>:<port>/redoc`
 - 健康检查：`GET /health` → `{"code":200,"message":"success","data":{"status":"ok"}}`
 
 所有业务接口统一返回：
@@ -157,6 +133,6 @@ openssl req -x509 -nodes -newkey rsa:2048 \
 
 - **`SESSION_SECRET_KEY must be set …`**：`.env` 中未配置或长度 < 32。
 - **`CORS_ORIGINS must declare at least one allowed origin`**：必须显式列出前端来源，禁止 `*`。
-- **`no HTTPS certificate found`**：见“证书配置”三种方式之一。
 - **`backend dependencies are not installed`**：在当前 `python3`（或 `BACKEND_VENV_DIR`）里执行 `pip install -r requirements.txt`。
-- **Docker 健康检查失败**：通常是证书路径或卷挂载不一致，确认 `BACKEND_SSL_CERT_FILE` 指向容器内路径（默认 `/app/certs/...`）。
+- **`TUNNEL_TOKEN must be set in .env`**：`docker compose` 需要 Cloudflare Tunnel 令牌，见“对外暴露”。
+- **Tunnel 502 / 无法访问**：确认 Public Hostname 指向 `http://backend:8000`（不是 `https://`，也不是 `localhost`），且 `cloudflared` 与 backend 在同一 compose 网络。

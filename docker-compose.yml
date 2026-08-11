@@ -6,25 +6,32 @@ services:
       dockerfile: Dockerfile.backend
     container_name: handwrite-backend
     restart: unless-stopped
+    # Only published on the loopback interface: public access goes through
+    # Cloudflare Tunnel, not through this port.
     ports:
-      - "${BACKEND_PORT:-8443}:8443"
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     environment:
       BACKEND_HOST: 0.0.0.0
-      BACKEND_PORT: 8443
+      BACKEND_PORT: 8000
       SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:?SESSION_SECRET_KEY must be set in .env}
       CORS_ORIGINS: ${CORS_ORIGINS:?CORS_ORIGINS must be set in .env}
-      BACKEND_DOMAIN: ${BACKEND_DOMAIN:-}
-      LETSENCRYPT_DOMAIN: ${LETSENCRYPT_DOMAIN:-}
-      LETSENCRYPT_DIR: ${LETSENCRYPT_DIR:-/app/certs/letsencrypt}
-      LOCAL_CERT_DIR: ${LOCAL_CERT_DIR:-/app/certs/local}
-      BACKEND_SSL_CERT_FILE: ${BACKEND_SSL_CERT_FILE:-}
-      BACKEND_SSL_KEY_FILE: ${BACKEND_SSL_KEY_FILE:-}
       BACKEND_LOG_LEVEL: ${BACKEND_LOG_LEVEL:-INFO}
     volumes:
-      - ./certs:/app/certs:ro
       - ./backend/static/uploads:/app/backend/static/uploads
       - ./backend/static/output:/app/backend/static/output
       - ./backend/logs:/app/backend/logs
+    networks:
+      - handwrite
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: handwrite-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?TUNNEL_TOKEN must be set in .env}
+    depends_on:
+      - backend
     networks:
       - handwrite
 
