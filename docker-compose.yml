@@ -30,10 +30,12 @@ services:
     command: tunnel --no-autoupdate run
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN:?TUNNEL_TOKEN must be set in .env}
+    # Shares the backend's network namespace, so the tunnel's origin service
+    # can be written as either http://localhost:8000 or http://backend:8000.
+    # (With a separate namespace, "localhost" would point at cloudflared itself.)
+    network_mode: "service:backend"
     depends_on:
       - backend
-    networks:
-      - handwrite
 
 networks:
   handwrite:

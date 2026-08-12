@@ -82,8 +82,10 @@ backend/
    TUNNEL_TOKEN="eyJhIjoi..."
    ```
 3. 在 Tunnel 的 Public Hostname 中把域名（如 `api.example.com`）指向
-   `http://backend:8000`（compose 内的服务名与端口）。
-4. `docker compose up -d` 后，`cloudflared` 与后端同处 `handwrite` 网络即可连通。
+   `http://backend:8000` 或 `http://localhost:8000`。
+4. `docker compose up -d` 即可。`cloudflared` 使用 `network_mode: "service:backend"`
+   与后端共用网络命名空间，因此上面两种写法都能连通；若改成独立网络，
+   则 `localhost` 会指向 cloudflared 容器自身，只能写 `http://backend:8000`。
 
 `docker-compose.yml` 中后端端口只绑定在 `127.0.0.1`，用于本机调试；
 **不要**把它直接发布到公网。
@@ -135,4 +137,4 @@ backend/
 - **`CORS_ORIGINS must declare at least one allowed origin`**：必须显式列出前端来源，禁止 `*`。
 - **`backend dependencies are not installed`**：在当前 `python3`（或 `BACKEND_VENV_DIR`）里执行 `pip install -r requirements.txt`。
 - **`TUNNEL_TOKEN must be set in .env`**：`docker compose` 需要 Cloudflare Tunnel 令牌，见“对外暴露”。
-- **Tunnel 502 / 无法访问**：确认 Public Hostname 指向 `http://backend:8000`（不是 `https://`，也不是 `localhost`），且 `cloudflared` 与 backend 在同一 compose 网络。
+- **Tunnel 502 / `dial tcp [::1]:8000: connect: connection refused`**：cloudflared 没能连到后端。确认 Public Hostname 是 `http://`（不是 `https://`）、端口 8000，且 `cloudflared` 与 backend 共用网络（`network_mode: "service:backend"`）；独立网络时 `localhost` 指的是 cloudflared 容器自身，必须改用 `http://backend:8000`。
